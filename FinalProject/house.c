@@ -27,6 +27,7 @@ void populateRooms(HouseType* house) {
     // This adds each room to each other's room lists
     // All rooms are two-way connections
     connectRooms(van, hallway);
+    //Hallway adds van / van adds hallway
     connectRooms(hallway, master_bedroom);
     connectRooms(hallway, boys_bedroom);
     connectRooms(hallway, bathroom);

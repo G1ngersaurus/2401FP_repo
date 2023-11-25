@@ -20,6 +20,69 @@
 typedef enum EvidenceType EvidenceType;
 typedef enum GhostClass GhostClass;
 
+typedef struct House HouseType;
+typedef struct Room RoomType;
+typedef struct Ghost GhostType;
+typedef struct Hunter HunterType;
+typedef struct RoomNode RoomNodeType;
+
+typedef struct RoomList RoomListType;
+typedef struct EvidenceList EvidenceListType;
+typedef struct HunterList HunterListType;
+
+struct RoomList 
+{
+  RoomNodeType *head;
+  RoomNodeType *tail;
+};
+
+struct EvidenceList 
+{
+  //RoomNodeType *head;
+  //RoomNodeType *tail;
+  //semaphore maybe
+};
+
+struct RoomNode 
+{
+  RoomType* data;
+  struct RoomNode* next;
+};
+
+struct House
+{
+    HunterListType *hunters;
+    RoomListType *roomList;
+    EvidenceListType *evidence;
+};
+
+struct Room
+{
+    char name[MAX_STR];
+    RoomListType *adjacentRooms;
+    EvidenceListType *evidence;
+    HunterListType *hunters;
+    GhostType *ghost;
+    //semaphore maybe
+};
+
+struct Hunter
+{
+    char name[MAX_STR];
+    RoomType *currRoom;
+    EvidenceType device;
+    EvidenceListType *evidence;
+    int fear;
+    int boredom;
+};
+
+struct Ghost
+{
+    GhostClass type;
+    RoomType *currRoom;
+    int boredom;
+};
+
 enum EvidenceType { EMF, TEMPERATURE, FINGERPRINTS, SOUND, EV_COUNT, EV_UNKNOWN };
 enum GhostClass { POLTERGEIST, BANSHEE, BULLIES, PHANTOM, GHOST_COUNT, GH_UNKNOWN };
 enum LoggerDetails { LOG_FEAR, LOG_BORED, LOG_EVIDENCE, LOG_SUFFICIENT, LOG_INSUFFICIENT, LOG_UNKNOWN };
