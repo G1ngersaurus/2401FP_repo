@@ -10,7 +10,7 @@ int main()
     HouseType house;
     initHouse(&house);
     populateRooms(&house);
-
+    printf("Test again\n");
     return 0;
 }
 
