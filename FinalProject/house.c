@@ -1,5 +1,9 @@
 #include "defs.h"
 
+void initHouse(HouseType *h){
+    
+}
+
 /*
     Dynamically allocates several rooms and populates the provided house.
     Note: You may modify this as long as room names and connections are maintained.

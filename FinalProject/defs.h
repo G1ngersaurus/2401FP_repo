@@ -25,49 +25,55 @@ typedef struct Room RoomType;
 typedef struct Ghost GhostType;
 typedef struct Hunter HunterType;
 typedef struct RoomNode RoomNodeType;
+typedef struct HunterNode HunterNodeType;
+typedef struct EvidenceNode EvidenceNodeType;
 
 typedef struct RoomList RoomListType;
 typedef struct EvidenceList EvidenceListType;
 typedef struct HunterList HunterListType;
 
-struct RoomList 
-{
+struct RoomList {
   RoomNodeType *head;
   RoomNodeType *tail;
 };
 
-struct EvidenceList 
-{
-  //RoomNodeType *head;
-  //RoomNodeType *tail;
-  //semaphore maybe
+struct EvidenceList {
+  EvidenceNodeType *head;
+  EvidenceNodeType *tail;
+  sem_t mutex;
 };
 
-struct RoomNode 
-{
+struct RoomNode {
   RoomType* data;
   struct RoomNode* next;
 };
 
-struct House
-{
+struct HunterNode {
+  HunterType* data;
+  struct HunterNode* next;
+};
+
+struct EvidenceNode {
+  EvidenceType* data;
+  struct EvidenceNode* next;
+};
+
+struct House {
     HunterListType *hunters;
-    RoomListType *roomList;
+    RoomListType *rooms;
     EvidenceListType *evidence;
 };
 
-struct Room
-{
+struct Room {
     char name[MAX_STR];
     RoomListType *adjacentRooms;
     EvidenceListType *evidence;
     HunterListType *hunters;
     GhostType *ghost;
-    //semaphore maybe
+    sem_t mutex;
 };
 
-struct Hunter
-{
+struct Hunter {
     char name[MAX_STR];
     RoomType *currRoom;
     EvidenceType device;
@@ -76,16 +82,31 @@ struct Hunter
     int boredom;
 };
 
-struct Ghost
-{
+struct Ghost {
     GhostClass type;
     RoomType *currRoom;
     int boredom;
 };
 
+struct HunterList {
+  HunterNodeType *head;
+  HunterNodeType *tail;
+};
+
 enum EvidenceType { EMF, TEMPERATURE, FINGERPRINTS, SOUND, EV_COUNT, EV_UNKNOWN };
 enum GhostClass { POLTERGEIST, BANSHEE, BULLIES, PHANTOM, GHOST_COUNT, GH_UNKNOWN };
 enum LoggerDetails { LOG_FEAR, LOG_BORED, LOG_EVIDENCE, LOG_SUFFICIENT, LOG_INSUFFICIENT, LOG_UNKNOWN };
+
+// Object initialization functions
+void initHouse(HouseType *h);
+void initRoom(char *name, RoomType **r);
+void initHunter(char *name, HunterType **h, enum EvidenceType equipment, RoomType *r, EvidenceListType *sharedList);
+void initGhost(GhostClass class, RoomType *r);
+
+// List initialization functions
+void initRoomList(RoomListType *list);
+void initEvidenceList(EvidenceListType *list);
+void initHunterList(HunterListType *list);
 
 // Helper Utilies
 int randInt(int,int);        // Pseudo-random number generator function
