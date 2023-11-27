@@ -5,7 +5,7 @@ void initRoomList(RoomListType *list){
     list->tail = NULL;
 }
 
-void initRoom(char *newName, RoomType **room){
+RoomType* createRoom(char *newName){
     RoomType *newRoom = malloc(sizeof(RoomType));
     strcpy(newRoom->name, newName);
 
@@ -29,5 +29,37 @@ void initRoom(char *newName, RoomType **room){
     }
     newRoom->mutex = mutexInit;
 
-    *room = newRoom;
+    return newRoom;
+}
+
+void addRoom(RoomListType *list, RoomType *r){
+    RoomNodeType *currNode;
+    RoomNodeType *prevNode;
+    RoomNodeType *newNode;
+
+    currNode = list->head;
+    prevNode = NULL;
+
+    while (currNode != NULL){
+        prevNode = currNode;
+        currNode = currNode->next;
+    }
+
+    newNode = malloc(sizeof(RoomNodeType));
+    newNode->data = r;
+    newNode->next = NULL;
+
+    if (prevNode == NULL){
+        list->head = newNode;
+    }else{
+        prevNode->next = newNode;
+        list->tail = newNode;
+    }
+
+    newNode->next = currNode;
+}
+
+void connectRooms(RoomType *r1, RoomType *r2){
+    addRoom(r1->adjacentRooms, r2);
+    addRoom(r2->adjacentRooms, r1);
 }

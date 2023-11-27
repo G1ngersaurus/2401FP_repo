@@ -98,10 +98,10 @@ enum GhostClass { POLTERGEIST, BANSHEE, BULLIES, PHANTOM, GHOST_COUNT, GH_UNKNOW
 enum LoggerDetails { LOG_FEAR, LOG_BORED, LOG_EVIDENCE, LOG_SUFFICIENT, LOG_INSUFFICIENT, LOG_UNKNOWN };
 
 // Object initialization functions
-void initHouse(HouseType *h);
-void initRoom(char *name, RoomType **r);
+void initHouse(HouseType **h);
+RoomType* createRoom(char *name);
 void initHunter(char *name, HunterType **h, enum EvidenceType equipment, RoomType *r, EvidenceListType *sharedList);
-void initGhost(GhostClass class, RoomType *r);
+void initGhost(GhostClass class, GhostType **g);
 
 // List initialization functions
 void initRoomList(RoomListType *list);
@@ -114,6 +114,14 @@ float randFloat(float, float);  // Pseudo-random float generator function
 enum GhostClass randomGhost();  // Return a randomly selected a ghost type
 void ghostToString(enum GhostClass, char*); // Convert a ghost type to a string, stored in output paremeter
 void evidenceToString(enum EvidenceType, char*); // Convert an evidence type to a string, stored in output parameter
+
+// List operations
+void addRoom(RoomListType *l, RoomType *r);
+void connectRooms(RoomType *r1, RoomType *r2);
+void addHunter(HunterListType *l, HunterType *h);
+
+// Helper functions
+void pickStartingRoom(RoomListType* l, GhostType *g);
 
 // Logging Utilities
 void l_hunterInit(char* name, enum EvidenceType equipment);

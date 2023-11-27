@@ -1,7 +1,19 @@
 #include "defs.h"
 
-void initHouse(HouseType *h){
-    
+void initHouse(HouseType **h){
+    HouseType *newHouse = malloc(sizeof(HouseType));
+
+    RoomListType rList;
+    initRoomList(&rList); 
+    newHouse->rooms = &rList;
+
+    EvidenceListType eList;
+    initEvidenceList(&eList);
+    newHouse->evidence = &eList;
+
+    HunterListType hList;
+    initHunterList(&hList);
+    newHouse->hunters = &hList;
 }
 
 /*
