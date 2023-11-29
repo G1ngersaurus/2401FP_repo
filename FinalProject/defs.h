@@ -119,9 +119,21 @@ void evidenceToString(enum EvidenceType, char*); // Convert an evidence type to 
 void addRoom(RoomListType *l, RoomType *r);
 void connectRooms(RoomType *r1, RoomType *r2);
 void addHunter(HunterListType *l, HunterType *h);
+void addEvidenceLeave(RoomType *r, EvidenceType e);
+void addEvidenceFind(EvidenceType e, HouseType *h);
+void removeHunter(HunterListType *l, HunterType *h);
+
+// Behaviour functions
+void* ghostBehaviour(void* arg);
+void* hunterBehaviour(void* arg);
+void leaveEvidence(GhostType *g);
 
 // Helper functions
 void pickStartingRoom(RoomListType* l, GhostType *g);
+EvidenceType pickEvidenceToLeave(GhostType *g);
+void moveGhost(GhostType *g);
+int roomListSize(RoomListType *r);
+void moveHunter(HunterType *h);
 
 // Logging Utilities
 void l_hunterInit(char* name, enum EvidenceType equipment);

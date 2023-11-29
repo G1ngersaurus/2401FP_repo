@@ -43,3 +43,43 @@ void addHunter(HunterListType *list, HunterType *h){
 
     newNode->next = currNode;
 }
+
+void moveHunter(HunterType *hunter){
+    int options = listSize(hunter->currRoom->adjacentRooms);
+    int choice = randInt(1, options);
+
+    int index = 0;
+    RoomNodeType *currNode;
+    RoomNodeType *prevNode;
+
+    currNode = hunter->currRoom->adjacentRooms->head;
+    prevNode = NULL;
+
+    while (currNode != NULL && index != choice){
+        prevNode = currNode;
+        currNode = currNode->next;
+        index++;
+    }
+    hunter->currRoom->ghost = NULL;
+    addHunter(hunter->currRoom->hunters, hunter);
+}
+
+void* hunterBehaviour(void* arg){
+    HunterType* hunter = (HunterType*) arg;
+    while (1) {
+        usleep(HUNTER_WAIT);
+        if (hunter->currRoom->ghost != NULL){
+            hunter->boredom = 0;
+            hunter->fear++;
+        }
+        else {
+            hunter->boredom++;
+        }
+
+        //functionality
+
+        if (hunter->boredom >= BOREDOM_MAX || hunter->fear >= FEAR_MAX){
+            return NULL;
+        }
+    }
+}

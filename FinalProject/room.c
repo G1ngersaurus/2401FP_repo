@@ -24,8 +24,7 @@ RoomType* createRoom(char *newName){
     sem_t mutexInit;
     
     if (sem_init(&mutexInit, 0, 1) < 0) {
-    printf("semaphore initialization error\n");
-    exit(1);
+        printf("semaphore initialization error\n");
     }
     newRoom->mutex = mutexInit;
 
@@ -62,4 +61,20 @@ void addRoom(RoomListType *list, RoomType *r){
 void connectRooms(RoomType *r1, RoomType *r2){
     addRoom(r1->adjacentRooms, r2);
     addRoom(r2->adjacentRooms, r1);
+}
+
+int roomListSize(RoomListType *list){
+    int size = 0;
+    RoomNodeType *currNode;
+    RoomNodeType *prevNode;
+
+    currNode = list->head;
+    prevNode = NULL;
+
+    while (currNode != NULL){
+        prevNode = currNode;
+        currNode = currNode->next;
+        size++;
+    }
+    return size;
 }
