@@ -76,10 +76,25 @@ void* hunterBehaviour(void* arg){
             hunter->boredom++;
         }
 
-        //functionality
-
         if (hunter->boredom >= BOREDOM_MAX || hunter->fear >= FEAR_MAX){
             return NULL;
         }
+
+        int action = randInt(1, 3);
+        switch(action){
+            case 1:
+                moveHunter(hunter);
+            case 2:
+                if(checkEvidenceMatch(hunter, hunter->currRoom)){
+                    addEvidenceFind(hunter);
+                }
+            case 3:
+                // Review evidence
+                if (evidenceListSize(hunter->evidence) == 3){
+                    return NULL;
+                }
+
+        }
+        
     }
 }

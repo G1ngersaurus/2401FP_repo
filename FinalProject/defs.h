@@ -120,19 +120,22 @@ void addRoom(RoomListType *l, RoomType *r);
 void connectRooms(RoomType *r1, RoomType *r2);
 void addHunter(HunterListType *l, HunterType *h);
 void addEvidenceLeave(RoomType *r, EvidenceType e);
-void addEvidenceFind(EvidenceType e, HouseType *h);
+void addEvidenceFind(HunterType *h);
 void removeHunter(HunterListType *l, HunterType *h);
 
 // Behaviour functions
 void* ghostBehaviour(void* arg);
 void* hunterBehaviour(void* arg);
 void leaveEvidence(GhostType *g);
+int checkEvidenceMatch(HunterType *h, RoomType *r);
+//int reviewEvidence(HunterType *h);
 
 // Helper functions
 void pickStartingRoom(RoomListType* l, GhostType *g);
 EvidenceType pickEvidenceToLeave(GhostType *g);
 void moveGhost(GhostType *g);
 int roomListSize(RoomListType *r);
+int evidenceListSize(EvidenceListType *l);
 void moveHunter(HunterType *h);
 
 // Logging Utilities
