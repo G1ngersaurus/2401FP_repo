@@ -2,7 +2,7 @@
 
 void initGhost(GhostClass class, GhostType **ghost){
     GhostType *newGhost = malloc(sizeof(GhostType));
-    newGhost->type = class;
+    newGhost->type = &class;
     newGhost->boredom = 0;
 
     *ghost = newGhost;
@@ -13,16 +13,16 @@ void pickStartingRoom(RoomListType *list, GhostType *g){
     int room = randInt(1, 12);
 
     RoomNodeType *currNode;
-    RoomNodeType *prevNode;
+    //RoomNodeType *prevNode;
 
     int i = 0;
 
     currNode = list->head;
-    prevNode = NULL;
+    //prevNode = NULL;
 
     //Might be i <= room
     while (currNode != NULL && i < room){
-        prevNode = currNode;
+        //prevNode = currNode;
         currNode = currNode->next;
         i++;
     }
@@ -30,15 +30,10 @@ void pickStartingRoom(RoomListType *list, GhostType *g){
     g->currRoom = currNode->data;
 }
 
-//EMF, TEMPERATURE, FINGERPRINTS, SOUND
-// PO = 0, 1, 2
-// BA = 0, 1, 3
-// BU = 0, 2, 3
-// PH = 1, 2, 3 
-
 EvidenceType pickEvidenceToLeave(GhostType *ghost){
+    
     int evidenceleave = randInt(1, 3);
-    switch (ghost->type) {
+    switch (*ghost->type) {
         
         case POLTERGEIST:
             switch(evidenceleave){
@@ -80,6 +75,7 @@ EvidenceType pickEvidenceToLeave(GhostType *ghost){
                     return SOUND;
             }
     }
+    return GH_UNKNOWN;
 }
 
 void leaveEvidence(GhostType *ghost){
@@ -88,36 +84,42 @@ void leaveEvidence(GhostType *ghost){
 }
 
 void moveGhost(GhostType *ghost){
-    int options = listSize(ghost->currRoom->adjacentRooms);
+    int options = roomListSize(ghost->currRoom->adjacentRooms);
     int choice = randInt(1, options);
 
     int index = 0;
     RoomNodeType *currNode;
-    RoomNodeType *prevNode;
+    //RoomNodeType *prevNode;
 
     currNode = ghost->currRoom->adjacentRooms->head;
-    prevNode = NULL;
+    //prevNode = NULL;
 
     while (currNode != NULL && index != choice){
-        prevNode = currNode;
+        //prevNode = currNode;
         currNode = currNode->next;
         index++;
     }
     ghost->currRoom->ghost = NULL;
+    ghost->currRoom = currNode->data;
     currNode->data->ghost = ghost;
+    l_ghostMove(currNode->data->name);
 }
 
-// STILL SOME BEHAVIOUR TO MAKE, MOSTLY DONE
 void* ghostBehaviour(void* arg){
     GhostType* ghost = (GhostType*) arg;
     while (1){
         usleep(GHOST_WAIT);
+        if (sem_wait(&ghost->currRoom->mutex) < 0){
+            printf("Error on semaphore wait\n");
+            return NULL;
+        }
+
         if (ghost->currRoom->hunters->head != NULL) {
             ghost->boredom = 0;
             int action = randInt(1, 2);
             switch(action){
                 case 1:
-                    //Ghost does nothing
+
                 case 2:
                     leaveEvidence(ghost);
             }   
@@ -127,16 +129,22 @@ void* ghostBehaviour(void* arg){
             int action = randInt(1, 3);
             switch(action){
                 case 1:
-                    //Ghost does nothing
+
                 case 2:
                     leaveEvidence(ghost);
                 case 3:
                     moveGhost(ghost);
             }
         }
+        if (sem_post(&ghost->currRoom->mutex) < 0){
+            printf("Error on semaphore post\n");
+            return NULL;
+        }
+
         if (ghost->boredom >= BOREDOM_MAX){
+            l_ghostExit(LOG_BORED);
             return NULL;
         }
     }
-    //leave thread
+
 }   

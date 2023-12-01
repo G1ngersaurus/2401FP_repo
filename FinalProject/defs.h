@@ -76,14 +76,14 @@ struct Room {
 struct Hunter {
     char name[MAX_STR];
     RoomType *currRoom;
-    EvidenceType device;
+    enum EvidenceType *device;
     EvidenceListType *evidence;
     int fear;
     int boredom;
 };
 
 struct Ghost {
-    GhostClass type;
+    enum GhostClass *type;
     RoomType *currRoom;
     int boredom;
 };
@@ -98,10 +98,11 @@ enum GhostClass { POLTERGEIST, BANSHEE, BULLIES, PHANTOM, GHOST_COUNT, GH_UNKNOW
 enum LoggerDetails { LOG_FEAR, LOG_BORED, LOG_EVIDENCE, LOG_SUFFICIENT, LOG_INSUFFICIENT, LOG_UNKNOWN };
 
 // Object initialization functions
-void initHouse(HouseType **h);
+void initHouse(HouseType *h);
 RoomType* createRoom(char *name);
 void initHunter(char *name, HunterType **h, enum EvidenceType equipment, RoomType *r, EvidenceListType *sharedList);
 void initGhost(GhostClass class, GhostType **g);
+void populateRooms(HouseType *h);
 
 // List initialization functions
 void initRoomList(RoomListType *list);
@@ -120,8 +121,15 @@ void addRoom(RoomListType *l, RoomType *r);
 void connectRooms(RoomType *r1, RoomType *r2);
 void addHunter(HunterListType *l, HunterType *h);
 void addEvidenceLeave(RoomType *r, EvidenceType e);
-void addEvidenceFind(HunterType *h);
+void addEvidenceFind(HunterType *h, EvidenceType e);
 void removeHunter(HunterListType *l, HunterType *h);
+void freeHunterList(HunterListType *l);
+void freeEvidenceList(EvidenceListType *l);
+void freeRoomList(RoomListType *l);
+void freeHunterData(HunterListType *l);
+void freeEvidenceData(EvidenceListType *l);
+void freeRoomData(RoomListType *l);
+void cleanupHouse(HouseType *h);
 
 // Behaviour functions
 void* ghostBehaviour(void* arg);

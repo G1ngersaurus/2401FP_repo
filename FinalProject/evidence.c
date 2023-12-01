@@ -3,6 +3,13 @@
 void initEvidenceList(EvidenceListType *list){
     list->head = NULL;
     list->tail = NULL;
+
+    sem_t mutexInit;
+    
+    if (sem_init(&mutexInit, 0, 1) < 0) {
+        printf("semaphore initialization error\n");
+    }
+    list->mutex = mutexInit;
 }
 
 void addEvidenceLeave(RoomType *room, EvidenceType evidence){
@@ -19,7 +26,7 @@ void addEvidenceLeave(RoomType *room, EvidenceType evidence){
     }
 
     newNode = malloc(sizeof(EvidenceNodeType));
-    newNode->data = evidence;
+    newNode->data = &evidence;
     newNode->next = NULL;
 
     if (prevNode == NULL){
@@ -30,6 +37,7 @@ void addEvidenceLeave(RoomType *room, EvidenceType evidence){
     }
 
     newNode->next = currNode;
+    l_ghostEvidence(evidence, room->name);
 }
 
 int evidenceListSize(EvidenceListType *list){
@@ -48,7 +56,7 @@ int evidenceListSize(EvidenceListType *list){
     return size;
 }
 
-void addEvidenceFind(HunterType *h){
+void addEvidenceFind(HunterType *h, EvidenceType evidence){
     EvidenceNodeType *currNode;
     EvidenceNodeType *prevNode;
     EvidenceNodeType *newNode;
@@ -80,6 +88,7 @@ void addEvidenceFind(HunterType *h){
         } 
 
         newNode->next = currNode;
+        evidence = currNode->data;
     }
     
 }
@@ -101,4 +110,30 @@ int checkEvidenceMatch(HunterType *h, RoomType *r){
 
     return C_FALSE;
     
+}
+void freeEvidenceData(EvidenceListType *list){
+    EvidenceNodeType *currNode;
+    EvidenceNodeType *nextNode;
+    
+    currNode = list->head;
+
+    while (currNode != NULL) 
+    {
+        nextNode = currNode->next;
+        free(currNode->data);
+        currNode = nextNode;
+    }
+}  
+void freeEvidenceList(EvidenceListType *list){
+    EvidenceNodeType *currNode;
+    EvidenceNodeType *nextNode;
+    
+    currNode = list->head;
+
+    while (currNode != NULL) 
+    {
+        nextNode = currNode->next;
+        free(currNode);
+        currNode = nextNode;
+    }
 }

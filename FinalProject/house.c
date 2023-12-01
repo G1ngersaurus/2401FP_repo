@@ -1,19 +1,38 @@
 #include "defs.h"
 
-void initHouse(HouseType **h){
-    HouseType *newHouse = malloc(sizeof(HouseType));
+void initHouse(HouseType *h){
 
     RoomListType rList;
     initRoomList(&rList); 
-    newHouse->rooms = &rList;
+    h->rooms = &rList;
 
     EvidenceListType eList;
     initEvidenceList(&eList);
-    newHouse->evidence = &eList;
+    h->evidence = &eList;
 
     HunterListType hList;
     initHunterList(&hList);
-    newHouse->hunters = &hList;
+    h->hunters = &hList;
+}
+
+void cleanupHouse(HouseType *house){
+    RoomNodeType *currNode;
+    RoomNodeType *nextNode;
+    
+    currNode = house->rooms->head;
+
+    while (currNode != NULL){
+        nextNode = currNode->next;
+        freeRoomList(currNode->data->adjacentRooms);
+        freeHunterList(currNode->data->hunters);
+        currNode = nextNode;
+    }
+    freeRoomData(house->rooms);
+    freeRoomList(house->rooms);
+    freeEvidenceData(house->evidence);
+    freeEvidenceList(house->evidence);
+    freeHunterData(house->hunters);
+    freeHunterList(house->hunters);
 }
 
 /*
@@ -57,17 +76,17 @@ void populateRooms(HouseType* house) {
     connectRooms(garage, utility_room);
 
     // Add each room to the house's room list
-    addRoom(&house->rooms, van);
-    addRoom(&house->rooms, hallway);
-    addRoom(&house->rooms, master_bedroom);
-    addRoom(&house->rooms, boys_bedroom);
-    addRoom(&house->rooms, bathroom);
-    addRoom(&house->rooms, basement);
-    addRoom(&house->rooms, basement_hallway);
-    addRoom(&house->rooms, right_storage_room);
-    addRoom(&house->rooms, left_storage_room);
-    addRoom(&house->rooms, kitchen);
-    addRoom(&house->rooms, living_room);
-    addRoom(&house->rooms, garage);
-    addRoom(&house->rooms, utility_room);
+    addRoom(house->rooms, van);
+    addRoom(house->rooms, hallway);
+    addRoom(house->rooms, master_bedroom);
+    addRoom(house->rooms, boys_bedroom);
+    addRoom(house->rooms, bathroom);
+    addRoom(house->rooms, basement);
+    addRoom(house->rooms, basement_hallway);
+    addRoom(house->rooms, right_storage_room);
+    addRoom(house->rooms, left_storage_room);
+    addRoom(house->rooms, kitchen);
+    addRoom(house->rooms, living_room);
+    addRoom(house->rooms, garage);
+    addRoom(house->rooms, utility_room);
 }
