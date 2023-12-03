@@ -1,38 +1,40 @@
 #include "defs.h"
 
 void initHouse(HouseType *h){
-
+    
+    
     RoomListType rList;
     initRoomList(&rList); 
-    h->rooms = &rList;
+    h->rooms = rList;
 
     EvidenceListType eList;
     initEvidenceList(&eList);
-    h->evidence = &eList;
+    h->evidence = eList;
 
     HunterListType hList;
     initHunterList(&hList);
-    h->hunters = &hList;
+    h->hunters = hList;
+    
 }
 
 void cleanupHouse(HouseType *house){
     RoomNodeType *currNode;
     RoomNodeType *nextNode;
     
-    currNode = house->rooms->head;
+    currNode = house->rooms.head;
 
     while (currNode != NULL){
         nextNode = currNode->next;
-        freeRoomList(currNode->data->adjacentRooms);
-        freeHunterList(currNode->data->hunters);
+        freeRoomList(&currNode->data->adjacentRooms);
+        freeHunterList(&currNode->data->hunters);
         currNode = nextNode;
     }
-    freeRoomData(house->rooms);
-    freeRoomList(house->rooms);
-    freeEvidenceData(house->evidence);
-    freeEvidenceList(house->evidence);
-    freeHunterData(house->hunters);
-    freeHunterList(house->hunters);
+    freeRoomData(&house->rooms);
+    freeRoomList(&house->rooms);
+    freeEvidenceData(&house->evidence);
+    freeEvidenceList(&house->evidence);
+    freeHunterData(&house->hunters);
+    freeHunterList(&house->hunters);
 }
 
 /*
@@ -45,19 +47,19 @@ void populateRooms(HouseType* house) {
 
     // createRoom assumes that we dynamically allocate a room, initializes the values, and returns a RoomType*
     // create functions are pretty typical, but it means errors are harder to return aside from NULL
-    struct Room* van                = createRoom("Van");
-    struct Room* hallway            = createRoom("Hallway");
-    struct Room* master_bedroom     = createRoom("Master Bedroom");
-    struct Room* boys_bedroom       = createRoom("Boy's Bedroom");
-    struct Room* bathroom           = createRoom("Bathroom");
-    struct Room* basement           = createRoom("Basement");
-    struct Room* basement_hallway   = createRoom("Basement Hallway");
-    struct Room* right_storage_room = createRoom("Right Storage Room");
-    struct Room* left_storage_room  = createRoom("Left Storage Room");
-    struct Room* kitchen            = createRoom("Kitchen");
-    struct Room* living_room        = createRoom("Living Room");
-    struct Room* garage             = createRoom("Garage");
-    struct Room* utility_room       = createRoom("Utility Room");
+    RoomType* van                = createRoom("Van");
+    RoomType* hallway            = createRoom("Hallway");
+    RoomType* master_bedroom     = createRoom("Master Bedroom");
+    RoomType* boys_bedroom       = createRoom("Boy's Bedroom");
+    RoomType* bathroom           = createRoom("Bathroom");
+    RoomType* basement           = createRoom("Basement");
+    RoomType* basement_hallway   = createRoom("Basement Hallway");
+    RoomType* right_storage_room = createRoom("Right Storage Room");
+    RoomType* left_storage_room  = createRoom("Left Storage Room");
+    RoomType* kitchen            = createRoom("Kitchen");
+    RoomType* living_room        = createRoom("Living Room");
+    RoomType* garage             = createRoom("Garage");
+    RoomType* utility_room       = createRoom("Utility Room");
 
     // This adds each room to each other's room lists
     // All rooms are two-way connections
@@ -76,17 +78,17 @@ void populateRooms(HouseType* house) {
     connectRooms(garage, utility_room);
 
     // Add each room to the house's room list
-    addRoom(house->rooms, van);
-    addRoom(house->rooms, hallway);
-    addRoom(house->rooms, master_bedroom);
-    addRoom(house->rooms, boys_bedroom);
-    addRoom(house->rooms, bathroom);
-    addRoom(house->rooms, basement);
-    addRoom(house->rooms, basement_hallway);
-    addRoom(house->rooms, right_storage_room);
-    addRoom(house->rooms, left_storage_room);
-    addRoom(house->rooms, kitchen);
-    addRoom(house->rooms, living_room);
-    addRoom(house->rooms, garage);
-    addRoom(house->rooms, utility_room);
+    addRoom(&house->rooms, van);
+    addRoom(&house->rooms, hallway);
+    addRoom(&house->rooms, master_bedroom);
+    addRoom(&house->rooms, boys_bedroom);
+    addRoom(&house->rooms, bathroom);
+    addRoom(&house->rooms, basement);
+    addRoom(&house->rooms, basement_hallway);
+    addRoom(&house->rooms, right_storage_room);
+    addRoom(&house->rooms, left_storage_room);
+    addRoom(&house->rooms, kitchen);
+    addRoom(&house->rooms, living_room);
+    addRoom(&house->rooms, garage);
+    addRoom(&house->rooms, utility_room);
 }

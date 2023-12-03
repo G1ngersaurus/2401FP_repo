@@ -17,7 +17,7 @@ void addEvidenceLeave(RoomType *room, EvidenceType evidence){
     EvidenceNodeType *prevNode;
     EvidenceNodeType *newNode;
 
-    currNode = room->evidence->head;
+    currNode = room->evidence.head;
     prevNode = NULL;
 
     while (currNode != NULL){
@@ -30,10 +30,10 @@ void addEvidenceLeave(RoomType *room, EvidenceType evidence){
     newNode->next = NULL;
 
     if (prevNode == NULL){
-        room->evidence->head = newNode;
+        room->evidence.head = newNode;
     }else{
         prevNode->next = newNode;
-        room->evidence->tail = newNode;
+        room->evidence.tail = newNode;
     }
 
     newNode->next = currNode;
@@ -43,13 +43,13 @@ void addEvidenceLeave(RoomType *room, EvidenceType evidence){
 int evidenceListSize(EvidenceListType *list){
     int size = 0;
     EvidenceNodeType *currNode;
-    EvidenceNodeType *prevNode;
+    //EvidenceNodeType *prevNode;
 
     currNode = list->head;
-    prevNode = NULL;
+    //prevNode = NULL;
 
     while (currNode != NULL){
-        prevNode = currNode;
+        //prevNode = currNode;
         currNode = currNode->next;
         size++;
     }
@@ -61,9 +61,9 @@ void addEvidenceFind(HunterType *h, EvidenceType evidence){
     EvidenceNodeType *prevNode;
     EvidenceNodeType *newNode;
 
-    currNode = h->currRoom->evidence->head;
+    currNode = h->currRoom->evidence.head;
     prevNode = NULL;
-    int size = evidenceListSize(h->currRoom->evidence);
+    int size = evidenceListSize(&h->currRoom->evidence);
     int index = 0;
     int uniqueCount = 0;
 
@@ -77,7 +77,7 @@ void addEvidenceFind(HunterType *h, EvidenceType evidence){
     }
     if (uniqueCount == size){
         newNode = malloc(sizeof(EvidenceNodeType));
-        newNode->data = h->currRoom;
+        newNode->data = &evidence;
         newNode->next = NULL;
 
         if (prevNode == NULL){
@@ -88,20 +88,20 @@ void addEvidenceFind(HunterType *h, EvidenceType evidence){
         } 
 
         newNode->next = currNode;
-        evidence = currNode->data;
+        evidence = *currNode->data;
     }
     
 }
 
 int checkEvidenceMatch(HunterType *h, RoomType *r){
     EvidenceNodeType *currNode;
-    EvidenceNodeType *prevNode;
+    //EvidenceNodeType *prevNode;
 
-    currNode = r->evidence->head;
-    prevNode = NULL;
+    currNode = r->evidence.head;
+    //prevNode = NULL;
 
     while (currNode != NULL){
-        prevNode = currNode;
+        //prevNode = currNode;
         if(currNode->data == h->device){
             return C_TRUE;
         }

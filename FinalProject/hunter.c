@@ -69,14 +69,14 @@ void removeHunter(HunterListType *list, HunterType *hunter){
 }
 
 void moveHunter(HunterType *hunter){
-    int options = roomListSize(hunter->currRoom->adjacentRooms);
-    int choice = randInt(1, options);
+    int options = roomListSize(&hunter->currRoom->adjacentRooms);
+    int choice = randInt(1, options + 1);
 
     int index = 0;
     RoomNodeType *currNode;
     RoomNodeType *prevNode;
 
-    currNode = hunter->currRoom->adjacentRooms->head;
+    currNode = hunter->currRoom->adjacentRooms.head;
     prevNode = NULL;
 
     while (currNode != NULL && index != choice){
@@ -85,7 +85,7 @@ void moveHunter(HunterType *hunter){
         index++;
     }
     hunter->currRoom->ghost = NULL;
-    addHunter(prevNode->data->hunters, hunter);
+    addHunter(&prevNode->data->hunters, hunter);
     l_hunterMove(hunter->name, prevNode->data->name);
 }
 
@@ -153,16 +153,18 @@ void* hunterBehaviour(void* arg){
             printf("Error on semaphore wait\n");
             return NULL;
         }
-        int action = randInt(1, 3);
+        int action = randInt(1, 4);
         switch(action){
             case 1:
                 moveHunter(hunter);
+                continue;
             case 2:
                 if(checkEvidenceMatch(hunter, hunter->currRoom)){
-                    EvidenceType ev;
+                    EvidenceType ev = EV_UNKNOWN;
                     addEvidenceFind(hunter, ev);
                     l_hunterCollect(hunter->name, ev, hunter->currRoom->name);
                 }
+                continue;
             case 3:
                 // Review evidence
                 if (evidenceListSize(hunter->evidence) == 3){
@@ -172,6 +174,7 @@ void* hunterBehaviour(void* arg){
                 else {
                     l_hunterReview(hunter->name, LOG_INSUFFICIENT);
                 }
+                continue;
 
         }
         if (sem_post(&hunter->currRoom->mutex) < 0){

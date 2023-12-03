@@ -11,15 +11,15 @@ RoomType* createRoom(char *newName){
 
     RoomListType rList;
     initRoomList(&rList); 
-    newRoom->adjacentRooms = &rList;
+    newRoom->adjacentRooms = rList;
 
     EvidenceListType eList;
     initEvidenceList(&eList);
-    newRoom->evidence = &eList;
+    newRoom->evidence = eList;
 
     HunterListType hList;
     initHunterList(&hList);
-    newRoom->hunters = &hList;
+    newRoom->hunters = hList;
 
     sem_t mutexInit;
     
@@ -59,8 +59,8 @@ void addRoom(RoomListType *list, RoomType *r){
 }
 
 void connectRooms(RoomType *r1, RoomType *r2){
-    addRoom(r1->adjacentRooms, r2);
-    addRoom(r2->adjacentRooms, r1);
+    addRoom(&r1->adjacentRooms, r2);
+    addRoom(&r2->adjacentRooms, r1);
 }
 
 void freeRoomList(RoomListType *list){

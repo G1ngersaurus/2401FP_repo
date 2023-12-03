@@ -6,6 +6,9 @@
 #include <semaphore.h>
 #include <time.h>
 
+//Makefile line example
+////gcc -Wall -std=c99 -o t05 t05.c t05util.c -g
+
 #define MAX_STR         64
 #define MAX_RUNS        50
 #define BOREDOM_MAX     100
@@ -43,9 +46,14 @@ struct EvidenceList {
   sem_t mutex;
 };
 
+struct HunterList {
+  HunterNodeType *head;
+  HunterNodeType *tail;
+};
+
 struct RoomNode {
   RoomType* data;
-  struct RoomNode* next;
+  RoomNodeType* next;
 };
 
 struct HunterNode {
@@ -59,18 +67,19 @@ struct EvidenceNode {
 };
 
 struct House {
-    HunterListType *hunters;
-    RoomListType *rooms;
-    EvidenceListType *evidence;
+    RoomListType rooms;
+    EvidenceListType evidence;
+    HunterListType hunters;
 };
 
 struct Room {
     char name[MAX_STR];
-    RoomListType *adjacentRooms;
-    EvidenceListType *evidence;
-    HunterListType *hunters;
+    RoomListType adjacentRooms;
+    EvidenceListType evidence;
+    HunterListType hunters;
     GhostType *ghost;
     sem_t mutex;
+    // SORTING BY ADDRESS JUST MEANS DOING IF/ELSE TO DETERMINE ORDER IN WHICH YOU WAIT AND POST
 };
 
 struct Hunter {
@@ -82,26 +91,25 @@ struct Hunter {
     int boredom;
 };
 
-struct Ghost {
-    enum GhostClass *type;
-    RoomType *currRoom;
-    int boredom;
-};
 
-struct HunterList {
-  HunterNodeType *head;
-  HunterNodeType *tail;
-};
+
 
 enum EvidenceType { EMF, TEMPERATURE, FINGERPRINTS, SOUND, EV_COUNT, EV_UNKNOWN };
 enum GhostClass { POLTERGEIST, BANSHEE, BULLIES, PHANTOM, GHOST_COUNT, GH_UNKNOWN };
 enum LoggerDetails { LOG_FEAR, LOG_BORED, LOG_EVIDENCE, LOG_SUFFICIENT, LOG_INSUFFICIENT, LOG_UNKNOWN };
 
+
+struct Ghost {
+    enum GhostClass type;
+    RoomType *currRoom;
+    int boredom;
+};
+
 // Object initialization functions
 void initHouse(HouseType *h);
 RoomType* createRoom(char *name);
 void initHunter(char *name, HunterType **h, enum EvidenceType equipment, RoomType *r, EvidenceListType *sharedList);
-void initGhost(GhostClass class, GhostType **g);
+void initGhost(GhostType **g);
 void populateRooms(HouseType *h);
 
 // List initialization functions
@@ -145,6 +153,8 @@ void moveGhost(GhostType *g);
 int roomListSize(RoomListType *r);
 int evidenceListSize(EvidenceListType *l);
 void moveHunter(HunterType *h);
+void printResults(HouseType *h, GhostType *g);
+enum GhostClass pickRandType();
 
 // Logging Utilities
 void l_hunterInit(char* name, enum EvidenceType equipment);
