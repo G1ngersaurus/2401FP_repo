@@ -1,23 +1,27 @@
 #include "defs.h"
 
+//This function initailises a list of hunters which includes a head and a tail
 void initHunterList(HunterListType *list){
     list->head = NULL;
     list->tail = NULL;
 }
 
+//This function initailises all the values found in a HunterType object 
 void initHunter(char *name, HunterType **hunter, enum EvidenceType equipment, RoomType *room, EvidenceListType *list){
     HunterType *newHunter = malloc(sizeof(HunterType));
     strcpy(newHunter->name, name);
     newHunter->boredom = 0;
     newHunter->fear = 0;
     newHunter->currRoom = room;
-    newHunter->device = &equipment;
+    newHunter->device = equipment;
     newHunter->evidence = list;
 
     *hunter = newHunter;
     l_hunterInit(name, equipment);
 }
 
+//This function is used by a hunter to add evidence to the shared evidencelist  
+//It also mallocs space for the newNode
 void addHunter(HunterListType *list, HunterType *h){
     HunterNodeType *currNode;
     HunterNodeType *prevNode;
@@ -45,6 +49,7 @@ void addHunter(HunterListType *list, HunterType *h){
     newNode->next = currNode;
 }
 
+//This function removes a specified hunter from a list of hunters 
 void removeHunter(HunterListType *list, HunterType *hunter){
     HunterNodeType *currNode;
     HunterNodeType *prevNode;
@@ -53,22 +58,25 @@ void removeHunter(HunterListType *list, HunterType *hunter){
     prevNode = NULL;
 
     while (currNode != NULL) {
-        if (strcmp(currNode->data->name, hunter->name) == 0)
-        break;
-
+        if (strcmp(currNode->data->name, hunter->name) == 0){
+            break;
+        }
+        
         prevNode = currNode;
         currNode = currNode->next;
     }
-
     if (prevNode == NULL){
         list->head = currNode->next;
     } else {
-        prevNode->next = currNode->next;        
+        prevNode->next = currNode->next;      
     }
+
+    free(currNode);
 
 }
 
-void moveHunter(HunterType *hunter){
+//This function picks the room that a hunter will move to using the adjacentRooms list 
+RoomType* pickRoomToMove(HunterType *hunter){
     int options = roomListSize(&hunter->currRoom->adjacentRooms);
     int choice = randInt(1, options + 1);
 
@@ -84,11 +92,20 @@ void moveHunter(HunterType *hunter){
         currNode = currNode->next;
         index++;
     }
-    hunter->currRoom->ghost = NULL;
-    addHunter(&prevNode->data->hunters, hunter);
-    l_hunterMove(hunter->name, prevNode->data->name);
+
+    return prevNode->data;
+
 }
 
+//This function moves a hunter from one to room to another 
+void moveHunter(HunterType *hunter, RoomType* room){
+    removeHunter(&hunter->currRoom->hunters, hunter);
+    addHunter(&room->hunters, hunter);
+    hunter->currRoom = room;
+    l_hunterMove(hunter->name, room->name);
+}
+
+//This function frees the allocted memory from a hunterlist 
 void freeHunterList(HunterListType *list){
     HunterNodeType *currNode;
     HunterNodeType *nextNode;
@@ -103,6 +120,7 @@ void freeHunterList(HunterListType *list){
     }
 }
 
+//This function frees the data from a hunterlist 
 void freeHunterData(HunterListType *list){
     HunterNodeType *currNode;
     HunterNodeType *nextNode;
@@ -117,78 +135,107 @@ void freeHunterData(HunterListType *list){
     }
 }
 
+//This function dictates what action a hunter will take
+//If their boredom reaches BOREDOM_MAX of if their fear reaches FEAR_MAX they will be removed from currRoom list and activate pthread_exit(NULL);
+//The other actions are a 1/3 to move rooms, a 1/3 to try to collect eivdence from the room their in 
+//and a 1/3 chance to review evidence and see if they have enough to figure out what kind of ghost is in the house 
+//Also if a hunter is in the same room as a ghost their fear increases and their boredom is set to 0
+//If their not in the same room as the ghost boredom is increased by 1 
 void* hunterBehaviour(void* arg){
-    HunterType* hunter = (HunterType*) arg;
-    int check = C_FALSE;
-    while (1) {
+    HunterType* hunter = ((HunterType*) arg);
+    while (1){
         usleep(HUNTER_WAIT);
+        
+        if (hunter->boredom >= BOREDOM_MAX){
+            l_hunterExit(hunter->name, LOG_BORED);
+            removeHunter(&hunter->currRoom->hunters, hunter);
+            pthread_exit(NULL);
+        }
+
+        if (hunter->fear >= FEAR_MAX){
+            l_hunterExit(hunter->name, LOG_FEAR);
+            removeHunter(&hunter->currRoom->hunters, hunter);
+            pthread_exit(NULL);
+        }
+
         if (sem_wait(&hunter->currRoom->mutex) < 0){
-            printf("Error on semaphore wait\n");
             return NULL;
         }
+
         if (hunter->currRoom->ghost != NULL){
-            hunter->boredom = 0;
             hunter->fear++;
-        }
+            hunter->boredom = 0;
+        } 
         else {
             hunter->boredom++;
         }
-        if (sem_post(&hunter->currRoom->mutex) < 0){
-            printf("Error on semaphore post\n");
-            return NULL;
-        }
-        if (hunter->boredom >= BOREDOM_MAX){
-            l_hunterExit(hunter->name, LOG_BORED);
-            return NULL;
-        }
-        if (hunter->fear >= FEAR_MAX){
-            l_hunterExit(hunter->name, LOG_FEAR);
-            return NULL;
-        }
-        if (sem_wait(&hunter->currRoom->mutex) < 0){
-            printf("Error on semaphore wait\n");
-            return NULL;
-        }
-        if (sem_wait(&hunter->evidence->mutex) < 0){
-            printf("Error on semaphore wait\n");
-            return NULL;
-        }
+
         int action = randInt(1, 4);
         switch(action){
             case 1:
-                moveHunter(hunter);
-                continue;
-            case 2:
-                if(checkEvidenceMatch(hunter, hunter->currRoom)){
-                    EvidenceType ev = EV_UNKNOWN;
+                if (sem_wait(&hunter->currRoom->evidence.mutex) < 0){
+                    return NULL;
+                }
+                if (sem_wait(&hunter->evidence->mutex) < 0){
+                    return NULL;
+                }
+                
+                if (checkEvidenceMatch(hunter, hunter->currRoom)){
+                    EvidenceType ev = hunter->device;
                     addEvidenceFind(hunter, ev);
                     l_hunterCollect(hunter->name, ev, hunter->currRoom->name);
                 }
+                if (sem_post(&hunter->evidence->mutex) < 0){
+                    return NULL;
+                }
+                if (sem_post(&hunter->currRoom->evidence.mutex) < 0){
+                    return NULL;
+                }
+                if (sem_post(&hunter->currRoom->mutex) < 0){
+                    return NULL;
+                }
+                continue;
+            case 2:
+                RoomType* room = pickRoomToMove(hunter);
+                if (sem_wait(&room->mutex) < 0){
+                    return NULL;
+                }
+                RoomType* original = hunter->currRoom;
+                moveHunter(hunter, room);
+                if (sem_post(&room->mutex) < 0){
+                    return NULL;
+                }
+                if (sem_post(&original->mutex) < 0){
+                    return NULL;
+                }
                 continue;
             case 3:
-                // Review evidence
-                if (evidenceListSize(hunter->evidence) == 3){
-                    check = C_TRUE;
+                if (sem_wait(&hunter->evidence->mutex) < 0){
+                    return NULL;
+                }
+                if (checkUniques(hunter->evidence) == C_TRUE){
                     l_hunterReview(hunter->name, LOG_SUFFICIENT);
+                    if (sem_post(&hunter->evidence->mutex) < 0){
+                        return NULL;
+                    }
+                    if (sem_post(&hunter->currRoom->mutex) < 0){
+                        return NULL;
+                    }
+                    l_hunterExit(hunter->name, LOG_EVIDENCE);
+                    removeHunter(&hunter->currRoom->hunters, hunter);
+                    pthread_exit(NULL);
                 }
                 else {
                     l_hunterReview(hunter->name, LOG_INSUFFICIENT);
                 }
+                if (sem_post(&hunter->evidence->mutex) < 0){
+                    return NULL;
+                }
+                if (sem_post(&hunter->currRoom->mutex) < 0){
+                    return NULL;
+                }
                 continue;
 
         }
-        if (sem_post(&hunter->currRoom->mutex) < 0){
-            printf("Error on semaphore post\n");
-            return NULL;
-        }
-        if (sem_post(&hunter->evidence->mutex) < 0){
-            printf("Error on semaphore post\n");
-            return NULL;
-        }
-        if (check == C_TRUE){
-            l_hunterExit(hunter->name, LOG_EVIDENCE);
-            return NULL;
-        }
-        
     }
 }

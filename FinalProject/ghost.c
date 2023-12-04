@@ -1,35 +1,19 @@
 #include "defs.h"
 
+//This function initailises the values of a ghostType
+//This includes their type and their intial boredom (it also mallocs space for it)
 void initGhost(GhostType **ghost){
     GhostType *newGhost = malloc(sizeof(GhostType));
-    int choice = pickRandType();
+    int choice = randomGhost();
     newGhost->type = choice;
     newGhost->boredom = 0;
     *ghost = newGhost;
-    //printf("%d\n", *ghost->type);
 }
 
-enum GhostClass pickRandType(){
-    int type = randInt(0, 4);
-    switch(type){
-        case 0:
-            return POLTERGEIST;
-            break;
-        case 1:
-            return BANSHEE;
-            break;
-        case 2:
-            return BULLIES;
-            break;
-        case 3:
-            return PHANTOM;
-            break;
-    }
-}
-
+//This function picks the ghosts starting room and places it inside of that room
 void pickStartingRoom(RoomListType *list, GhostType *g){
 
-    int room = randInt(1, 12);
+    int room = randInt(2, 12);
 
     RoomNodeType *currNode;
     RoomNodeType *prevNode;
@@ -40,35 +24,22 @@ void pickStartingRoom(RoomListType *list, GhostType *g){
     currNode = list->head;
     prevNode = NULL;
     nextNode = NULL;
-    //printf("List size: %d\n", roomListSize(list));
-    printf("Before loop\n");
-
-    //while (currNode != NULL){
-    //    prevNode = currNode;
-    //    currNode = currNode->next;
-    //}
-
-    //Might be i <= room
+    
     while (currNode != NULL && i < room){
-        printf("%d\n", i);
-        printf("%d\n", room);
-        printf("Before currNode operation\n");
         nextNode = currNode->next;
         prevNode = currNode;
-        printf("After currNode operation\n");
         currNode = nextNode;
         
         i++;
     }
-    printf("After loop\n");
     prevNode->data->ghost = g;
     g->currRoom = prevNode->data;
-    printf("After loop 2\n");
 }
 
+//This function picks the kind of evidence that the ghost will be leaving based of the type of ghost 
 EvidenceType pickEvidenceToLeave(GhostType *ghost){
     
-    int evidenceleave = randInt(1, 3);
+    int evidenceleave = randInt(1, 4);
     switch ((ghost->type)) {
         
         case POLTERGEIST:
@@ -130,77 +101,129 @@ EvidenceType pickEvidenceToLeave(GhostType *ghost){
     return EV_UNKNOWN;
 }
 
+//This function allows the ghost to leave evidence in the rooms its in 
 void leaveEvidence(GhostType *ghost){
     EvidenceType toLeave = pickEvidenceToLeave(ghost);
     addEvidenceLeave(ghost->currRoom, toLeave);
 }
 
-void moveGhost(GhostType *ghost){
+//This fucntion allows that ghost to switch rooms by checking the adjeacent rooms list 
+RoomType* pickRoomGhost(GhostType *ghost){
     int options = roomListSize(&ghost->currRoom->adjacentRooms);
     int choice = randInt(1, options + 1);
 
     int index = 0;
     RoomNodeType *currNode;
-    //RoomNodeType *prevNode;
+    RoomNodeType *prevNode;
 
     currNode = ghost->currRoom->adjacentRooms.head;
-    //prevNode = NULL;
+    prevNode = NULL;
 
     while (currNode != NULL && index != choice){
-        //prevNode = currNode;
+        prevNode = currNode;
         currNode = currNode->next;
         index++;
     }
-    ghost->currRoom->ghost = NULL;
-    ghost->currRoom = currNode->data;
-    currNode->data->ghost = ghost;
-    l_ghostMove(currNode->data->name);
+
+    return prevNode->data;
 }
 
+//This function moves the ghost room one room to another 
+void moveGhost(GhostType *ghost, RoomType *room){
+    
+    ghost->currRoom->ghost = NULL;
+    ghost->currRoom = NULL;
+    ghost->currRoom = room;
+    ghost->currRoom->ghost = ghost;
+
+    l_ghostMove(room->name);
+}
+/*
+    This function dictates the ghost actions based on several variables
+    If the ghosts boredom has reached a value of BOREDOM_MAX the ghosts pthread_exit(NULL); is used 
+    The ghost has a 1/3 chance to do nothing. a 1/3 chance to leave evidence in the rooms its in 
+    and a 1/3 chance to move rooms only if the hunter is not in that room. 
+    If that happens the ghost instead has a 1/2 chance of doing nothing and a 1/2 chance of leaving evidence
+*/
 void* ghostBehaviour(void* arg){
-    GhostType* ghost = (GhostType*) arg;
-    while (1){
+    GhostType* ghost = ((GhostType*) arg);
+
+    while(1){
         usleep(GHOST_WAIT);
+
+        if (ghost->boredom >= BOREDOM_MAX){
+            l_ghostExit(LOG_BORED);
+            pthread_exit(NULL);
+        }
+        
         if (sem_wait(&ghost->currRoom->mutex) < 0){
-            printf("Error on semaphore wait\n");
             return NULL;
-            break;
         }
 
-        if (ghost->currRoom->hunters.head != NULL) {
+        if (ghost->currRoom->hunters.head != NULL){
             ghost->boredom = 0;
+
             int action = randInt(1, 3);
             switch(action){
                 case 1:
+                    if (sem_post(&ghost->currRoom->mutex) < 0){
+                        return NULL;
+                    }
                     continue;
                 case 2:
+                    if (sem_wait(&ghost->currRoom->evidence.mutex) < 0){
+                        return NULL;
+                    }
                     leaveEvidence(ghost);
+                    if (sem_post(&ghost->currRoom->evidence.mutex) < 0){
+                        return NULL;
+                    }
+                    if (sem_post(&ghost->currRoom->mutex) < 0){
+                        return NULL;
+                    }
                     continue;
-            }   
+            }
         }
-        else {
+        else{
             ghost->boredom++;
             int action = randInt(1, 4);
             switch(action){
                 case 1:
+                    if (sem_post(&ghost->currRoom->mutex) < 0){
+                        return NULL;
+                    }
+                    if (ghost->boredom >= BOREDOM_MAX){
+                        l_ghostExit(LOG_BORED);
+                        pthread_exit(NULL);
+        }
                     continue;
                 case 2:
+                    if (sem_wait(&ghost->currRoom->evidence.mutex) < 0){
+                        return NULL;
+                    }
                     leaveEvidence(ghost);
+                    if (sem_post(&ghost->currRoom->evidence.mutex) < 0){
+                        return NULL;
+                    }
+                    if (sem_post(&ghost->currRoom->mutex) < 0){
+                        return NULL;
+                    }
                     continue;
                 case 3:
-                    moveGhost(ghost);
+                    RoomType* room = pickRoomGhost(ghost);
+                    if (sem_wait(&room->mutex) < 0){
+                        return NULL;
+                    }
+                    RoomType* original = ghost->currRoom;
+                    moveGhost(ghost, room);
+                    if (sem_post(&room->mutex) < 0){
+                        return NULL;
+                    }
+                    if (sem_post(&original->mutex) < 0){
+                        return NULL;
+                    }
                     continue;
             }
         }
-        if (sem_post(&ghost->currRoom->mutex) < 0){
-            printf("Error on semaphore post\n");
-            return NULL;
-        }
-
-        if (ghost->boredom >= BOREDOM_MAX){
-            l_ghostExit(LOG_BORED);
-            return NULL;
-        }
     }
-
-}   
+}

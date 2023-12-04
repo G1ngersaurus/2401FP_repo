@@ -35,6 +35,9 @@ typedef struct RoomList RoomListType;
 typedef struct EvidenceList EvidenceListType;
 typedef struct HunterList HunterListType;
 
+enum EvidenceType { EMF, TEMPERATURE, FINGERPRINTS, SOUND, EV_COUNT, EV_UNKNOWN };
+enum GhostClass { POLTERGEIST, BANSHEE, BULLIES, PHANTOM, GHOST_COUNT, GH_UNKNOWN };
+
 struct RoomList {
   RoomNodeType *head;
   RoomNodeType *tail;
@@ -62,7 +65,7 @@ struct HunterNode {
 };
 
 struct EvidenceNode {
-  EvidenceType* data;
+  EvidenceType data;
   struct EvidenceNode* next;
 };
 
@@ -79,23 +82,8 @@ struct Room {
     HunterListType hunters;
     GhostType *ghost;
     sem_t mutex;
-    // SORTING BY ADDRESS JUST MEANS DOING IF/ELSE TO DETERMINE ORDER IN WHICH YOU WAIT AND POST
 };
 
-struct Hunter {
-    char name[MAX_STR];
-    RoomType *currRoom;
-    enum EvidenceType *device;
-    EvidenceListType *evidence;
-    int fear;
-    int boredom;
-};
-
-
-
-
-enum EvidenceType { EMF, TEMPERATURE, FINGERPRINTS, SOUND, EV_COUNT, EV_UNKNOWN };
-enum GhostClass { POLTERGEIST, BANSHEE, BULLIES, PHANTOM, GHOST_COUNT, GH_UNKNOWN };
 enum LoggerDetails { LOG_FEAR, LOG_BORED, LOG_EVIDENCE, LOG_SUFFICIENT, LOG_INSUFFICIENT, LOG_UNKNOWN };
 
 
@@ -105,6 +93,14 @@ struct Ghost {
     int boredom;
 };
 
+struct Hunter {
+    char name[MAX_STR];
+    RoomType *currRoom;
+    enum EvidenceType device;
+    EvidenceListType *evidence;
+    int fear;
+    int boredom;
+};
 // Object initialization functions
 void initHouse(HouseType *h);
 RoomType* createRoom(char *name);
@@ -144,17 +140,20 @@ void* ghostBehaviour(void* arg);
 void* hunterBehaviour(void* arg);
 void leaveEvidence(GhostType *g);
 int checkEvidenceMatch(HunterType *h, RoomType *r);
-//int reviewEvidence(HunterType *h);
 
 // Helper functions
 void pickStartingRoom(RoomListType* l, GhostType *g);
 EvidenceType pickEvidenceToLeave(GhostType *g);
-void moveGhost(GhostType *g);
+void moveGhost(GhostType *g, RoomType *r);
 int roomListSize(RoomListType *r);
 int evidenceListSize(EvidenceListType *l);
-void moveHunter(HunterType *h);
+void moveHunter(HunterType *h, RoomType* r);
 void printResults(HouseType *h, GhostType *g);
 enum GhostClass pickRandType();
+RoomType* pickRoomToMove(HunterType *h);
+RoomType* pickRoomGhost(GhostType *g);
+int checkUniques(EvidenceListType *l);
+void printUniques(EvidenceListType *l);
 
 // Logging Utilities
 void l_hunterInit(char* name, enum EvidenceType equipment);

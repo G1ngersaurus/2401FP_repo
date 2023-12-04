@@ -1,5 +1,6 @@
 #include "defs.h"
 
+//This function initailises the three lists RoomListType, EvidenceListType and HunterListType all found in a HouseType object 
 void initHouse(HouseType *h){
     
     
@@ -17,6 +18,7 @@ void initHouse(HouseType *h){
     
 }
 
+//This function frees all the allocated memory in the program using a series of free functions that can be found in the program
 void cleanupHouse(HouseType *house){
     RoomNodeType *currNode;
     RoomNodeType *nextNode;
@@ -27,14 +29,60 @@ void cleanupHouse(HouseType *house){
         nextNode = currNode->next;
         freeRoomList(&currNode->data->adjacentRooms);
         freeHunterList(&currNode->data->hunters);
+        freeEvidenceList(&currNode->data->evidence);
         currNode = nextNode;
     }
     freeRoomData(&house->rooms);
     freeRoomList(&house->rooms);
-    freeEvidenceData(&house->evidence);
     freeEvidenceList(&house->evidence);
-    freeHunterData(&house->hunters);
     freeHunterList(&house->hunters);
+}
+
+//This function prints the final results of the program inluding: 
+//Who won, what kind of ghost it is, which hunters ran away in fear or got bored and the evidence that was successfully collected 
+void printResults(HouseType *house, GhostType *ghost){
+    HunterNodeType *currNode;
+    HunterNodeType *nextNode;
+    
+    currNode = house->hunters.head;
+    int count = 0;
+    printf("=================================================\n");
+    while (currNode != NULL) 
+    {
+        nextNode = currNode->next;
+        if (currNode->data->boredom >= BOREDOM_MAX){
+            printf("Hunter %s left because there was nothing to do\n", currNode->data->name);
+            count++;
+        }
+        if (currNode->data->fear >= FEAR_MAX){
+            count++;
+            printf("Hunter %s ran away in fear\n", currNode->data->name);
+        }
+        currNode = nextNode;
+    }
+    printf("=================================================\n");
+    if (count == 4){
+        printf("The ghost won\n");
+    }
+    else{
+        printf("The hunters won\n");
+    }
+    printf("=================================================\n");
+    char type[MAX_STR];
+    ghostToString(ghost->type, type);
+    printf("Ghost was a type %s\n", type);
+    printf("=================================================\n");
+    printf("The hunters found the following evidence:\n");
+    printUniques(&house->evidence);
+    printf("=================================================\n");
+    if (count != 4){
+        printf("They determined it was a %s\n", type);
+    }
+    else{
+        printf("They did not determine the type\n");
+    }
+    
+
 }
 
 /*

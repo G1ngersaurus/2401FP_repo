@@ -1,33 +1,36 @@
-EXECS = p1 p2 p3 p4 p5 p6 p7 p8
-GCC = gcc
-WARNS = -Wall -Wextra -std=c99 -o
-VAL = -Wextra -std=c99 -o
+FINAL = fp
+OUTPUTS = evidence.o ghost.o house.o hunter.o logger.o main.o room.o utils.o
+GCC1 = gcc -o
+GCC2 = gcc -Wall -Wextra -c
 
-all: $(EXECS)
+all: ${FINAL}
 
-p1:	logger.c  
-	$(GCC) $(WARNS) p1 logger.c
+${FINAL}: ${OUTPUTS}
+	$(GCC1) ${FINAL} ${OUTPUTS} -lm
 
-p2:	evidence.c
-	$(GCC) $(WARNS) p2 evidence.c
+evidence.o: evidence.c defs.h
+	$(GCC2) evidence.c
 
-p3:	hunter.c
-	$(GCC) $(WARNS) p3 hunter.c
+ghost.o: ghost.c defs.h
+	$(GCC2) ghost.c
 
-p4:	house.c
-	$(GCC) $(WARNS) p4 house.c
+house.o: house.c defs.h
+	$(GCC2) house.c
 
-p5:	ghost.c
-	$(GCC) $(WARNS) p5 ghost.c
+hunter.o: hunter.c defs.h
+	$(GCC2) hunter.c
 
-p6:	room.c
-	$(GCC) $(WARNS) p6 room.c
+logger.o: logger.c defs.h
+	$(GCC2) logger.c
 
-p7:	utils.c
-	$(GCC) $(WARNS) p7 utils.c
+main.o: main.c defs.h
+	$(GCC2) main.c
 
-p8:	main.c 
-	$(GCC) $(WARNS) p8 main.c
+room.o: room.c defs.h
+	$(GCC2) room.c
+
+utils.o: utils.c defs.h
+	$(GCC2) utils.c
 
 clean:
-	rm -f $(EXECS)
+	rm -f ${FINAL} ${OUTPUTS}
