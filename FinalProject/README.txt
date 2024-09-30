@@ -12,7 +12,7 @@ Files included:
     ~ defs.h
         ~ Header file containing all pre-definitions
     ~ evidence.c
-        ~ A C file that contains all the functions needed to interact with evidecne
+        ~ A C file that contains all the functions needed to interact with evidence
     ~ ghost.c 
         ~ A C file that contains all the functions needed to interact with ghosts
     ~ house.c
